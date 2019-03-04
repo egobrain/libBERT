@@ -242,26 +242,29 @@ int bert_encode_list(bert_encoder_t *encoder,const bert_list_t *list)
 		next_node = next_node->next;
 	}
 
-	int result;
+    if (length) {
 
-	if ((result = bert_encode_list_header(encoder,length)) != BERT_SUCCESS)
-	{
-		return result;
-	}
+        int result;
 
-	next_node = list->head;
+        if ((result = bert_encode_list_header(encoder,length)) != BERT_SUCCESS)
+        {
+            return result;
+        }
 
-	while (next_node)
-	{
-		if ((result = bert_encoder_push(encoder,next_node->data)) != BERT_SUCCESS)
-		{
-			return result;
-		}
+        next_node = list->head;
 
-		next_node = next_node->next;
-	}
+        while (next_node)
+        {
+            if ((result = bert_encoder_push(encoder,next_node->data)) != BERT_SUCCESS)
+            {
+                return result;
+            }
 
-	return BERT_SUCCESS;
+            next_node = next_node->next;
+        }
+    }
+
+    return bert_encode_nil(encoder);
 }
 
 int bert_encode_complex_header(bert_encoder_t *encoder,const char *name,size_t elements)
@@ -288,7 +291,11 @@ int bert_encode_complex_header(bert_encoder_t *encoder,const char *name,size_t e
 
 int bert_encode_nil(bert_encoder_t *encoder)
 {
-	return bert_encode_complex_header(encoder,"nil",0);
+    size_t buffer_length = 1;
+    unsigned char buffer[buffer_length];
+    bert_write_magic(buffer,BERT_NIL);
+
+    return bert_encoder_write(encoder,buffer,buffer_length);
 }
 
 int bert_encode_true(bert_encoder_t *encoder)
